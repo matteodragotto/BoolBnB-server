@@ -36,14 +36,13 @@ const update = (req, res) => {
 const modify = (req, res) => {
   const id = req.params.id
 
-  const sql = `UPDATE real_estate SET mi_piace = mi_piace + 1 WHERE real_estate_id = ?`
+  const sql = `UPDATE real_estate SET mi_piace = mi_piace + 1 WHERE real_estate.id = ?`
 
   connection.query(sql, [id], (err, results) => {
     if (err) return res.status(500).json({ error: err })
 
     res.json({ message: 'Il numero dei like è aumentato di 1' })
   })
-
 }
 
 const destroy = (req, res) => {
