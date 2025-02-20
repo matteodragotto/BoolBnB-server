@@ -61,7 +61,19 @@ const show = (req, res) => {
 }
 
 const store = (req, res) => {
-  res.send('Aggiungo un immobile')
+  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id } = req.body;
+  if (!titolo || !descrizione || !numero_stanze || !numero_letti || !numero_bagni || !metri_quadri || !indirizzo_completo || !email || !tipologia || !luogo || !prezzo_notte || !proprietary_users_id) {
+    return res.status(400).send('Campi obbligatori');
+  }
+  const sql = `
+    INSERT INTO real_estate 
+    (titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id], (err, results) => {
+    if (err) return res.status(500).send({ error: err.message });
+    res.status(201).send('Immobile creato');
+  })
 }
 
 const update = (req, res) => {
