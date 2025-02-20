@@ -2,7 +2,7 @@ const multer = require('multer');
 
 // upload dellimmagine
 const storage = multer.diskStorage({
-  destination: "./public/img/movies",
+  destination: "./public/img/immobili",
   filename: (req, file, cb) => {
     // creo un nome univoco per il file
     const uniqueName = `${Date.now()}-${file.originalname}`;
