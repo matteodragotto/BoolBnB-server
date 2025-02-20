@@ -96,6 +96,25 @@ const storeInterestedUser = (req, res) => {
   })
 }
 
+const storeProprietaryUser = (req, res) => {
+
+  const { nome, cognome, data_di_nascita, numero_telefono, lingue_parlate, immagine_profilo } = req.body
+
+  if (!nome || !cognome || !data_di_nascita || !numero_telefono || !lingue_parlate) {
+    return res.status(400).json({ error: "Tutti i campi sono necessari" });
+  }
+
+  const sql = 'INSERT INTO proprietary_users (nome, cognome, data_di_nascita, numero_telefono, lingue_parlate, immagine_profilo) VALUES (?, ?, ?, ?, ?, ?)'
+
+  connection.query(sql, [nome, cognome, data_di_nascita, numero_telefono, lingue_parlate, immagine_profilo], (err, results) => {
+    if (err) return res.status(500).json({ error: err })
+
+    res.json({
+      message: 'Utente interessato registrato con successo'
+    });
+  })
+}
+
 const storeReviews = (req, res) => {
   const id = req.params.id
 
@@ -118,7 +137,31 @@ const storeReviews = (req, res) => {
 }
 
 const update = (req, res) => {
-  res.send('Modifico un immobile')
+  const id = req.params.id
+
+  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte } = req.body;
+
+  const sql = `UPDATE real_estate 
+  SET titolo = ?, 
+  descrizione = ?, 
+  numero_stanze = ?, 
+  numero_letti = ?, 
+  numero_bagni = ?, 
+  metri_quadri = ?, 
+  indirizzo_completo = ?, 
+  email = ?, 
+  tipologia = ?, 
+  luogo = ?, 
+  prezzo_notte = ? 
+  WHERE real_estate.id = ?
+  `
+
+  connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, id], (err, results) => {
+    if (err) return res.status(500).json({ error: err })
+
+    res.json({ message: `Le informazioni dell'immobile sono state modificate` })
+  })
+
 }
 
 const modify = (req, res) => {
@@ -170,6 +213,7 @@ module.exports = {
   store,
   storeReviews,
   storeInterestedUser,
+  storeProprietaryUser,
   update,
   modify,
   destroy

@@ -14,7 +14,10 @@ router.post('/', bnbController.store)
 
 router.post('/:id', bnbController.storeReviews);
 
-router.post('/utenti/registrazione', bnbController.storeInterestedUser)
+router.post('/UI/registrazione', bnbController.storeInterestedUser)
+router.post('/UP/registrazione', bnbController.storeProprietaryUser)
+
+
 
 //update
 router.put('/:id', bnbController.update)
