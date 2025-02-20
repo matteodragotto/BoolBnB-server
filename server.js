@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors')
-const port = process.env.port
+const port = process.env.port || 3002
 const bnbRouter = require('./router/b&b')
 const errorsHandler = require('./middlewares/errorsHandler')
 const notFound = require('./middlewares/notFound')
