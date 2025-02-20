@@ -29,6 +29,27 @@ const store = (req, res) => {
   res.send('Aggiungo un immobile')
 }
 
+const storeReviews = (req, res) => {
+  const id = req.params.id
+
+  const { voto, descrizione, interested_users_id } = req.body;
+
+  if (!voto || !descrizione || !interested_users_id) {
+    return res.status(400).json({ error: 'Tutti i campi sono necessari' });
+  }
+
+  const sql = 'INSERT INTO reviews (voto, descrizione, real_estate_id, interested_users_id) VALUES (?, ?, ?, ?)'
+
+  connection.query(sql, [voto, descrizione, id, interested_users_id], (err, results) => {
+    if (err) return res.status(500).json({ error: err })
+
+    res.json({
+      message: 'Recensione aggiunta con successo'
+    });
+  })
+
+}
+
 const update = (req, res) => {
   res.send('Modifico un immobile')
 }
@@ -53,6 +74,7 @@ module.exports = {
   index,
   show,
   store,
+  storeReviews,
   update,
   modify,
   destroy
