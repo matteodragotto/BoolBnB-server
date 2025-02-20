@@ -29,6 +29,25 @@ const store = (req, res) => {
   res.send('Aggiungo un immobile')
 }
 
+const storeInterestedUser = (req, res) => {
+
+  const { nome, cognome, data_di_nascita, numero_telefono, immagine_profilo } = req.body
+
+  if (!nome || !cognome || !data_di_nascita || !numero_telefono) {
+    return res.status(400).json({ error: "Tutti i campi sono necessari" });
+  }
+
+  const sql = 'INSERT INTO interested_users (nome, cognome, data_di_nascita, numero_telefono, immagine_profilo) VALUES (?, ?, ?, ?, ?)'
+
+  connection.query(sql, [nome, cognome, data_di_nascita, numero_telefono, immagine_profilo], (err, results) => {
+    if (err) return res.status(500).json({ error: err })
+
+    res.json({
+      message: 'Utente interessato registrato con successo'
+    });
+  })
+}
+
 const storeReviews = (req, res) => {
   const id = req.params.id
 
@@ -75,6 +94,7 @@ module.exports = {
   show,
   store,
   storeReviews,
+  storeInterestedUser,
   update,
   modify,
   destroy
