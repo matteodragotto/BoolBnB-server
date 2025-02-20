@@ -1,5 +1,6 @@
 const connection = require('../data/db')
 const path = require('path')
+const fs = require('fs');
 
 
 const index = (req, res) => {
@@ -133,8 +134,35 @@ const modify = (req, res) => {
 }
 
 const destroy = (req, res) => {
-  res.send('Cancello un immobile')
+
+  const id = req.params.id;
+
+  const selectSql = 'SELECT * FROM images WHERE images.real_estate_id = ?'
+
+  const sqlDelete =
+    `DELETE FROM real_estate 
+  JOIN images ON real_estate.id = images.real_estate_id
+  WHERE real_estate.id = ?`
+
+  connection.query(selectSql, [id], (err, results) => {
+    const imageName = results.forEach(image => {
+      return image.url
+    })
+    const imagePath = path.join(__dirname, '../public/img/immobili', imageName)
+
+    fs.unlink(imagePath, (err) => {
+      console.log(err);
+    })
+
+    connection.query(sqlDelete, [id], (err) => {
+      if (err) return res.status(500).json({ error: "Non è stato possibile eliminare l'immobile" })
+      res.json({ message: 'Immobile eliminato con successo' })
+    })
+
+    res.sendStatus(204)
+  })
 }
+
 
 module.exports = {
   index,
