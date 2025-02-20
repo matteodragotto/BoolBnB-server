@@ -9,7 +9,7 @@ const index = (req, res) => {
   GROUP BY real_estate.id;`
 
   connection.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Richiesta al database fallita' })
+    if (err) return res.status(500).json({ error: err })
 
     const immobili = results.map(result => {
 
@@ -34,7 +34,16 @@ const update = (req, res) => {
 }
 
 const modify = (req, res) => {
-  res.send('Modifico un immobile')
+  const id = req.params.id
+
+  const sql = `UPDATE real_estate SET mi_piace = mi_piace + 1 WHERE real_estate_id = ?`
+
+  connection.query(sql, [id], (err, results) => {
+    if (err) return res.status(500).json({ error: err })
+
+    res.json({ message: 'Il numero dei like è aumentato di 1' })
+  })
+
 }
 
 const destroy = (req, res) => {
