@@ -11,6 +11,7 @@ router.get('/:id', bnbController.show)
 
 //store
 router.post('/', bnbController.store)
+router.post('/immagini', bnbController.storeImages)
 
 router.post('/:id', bnbController.storeReviews);
 

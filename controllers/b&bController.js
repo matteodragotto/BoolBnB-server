@@ -63,18 +63,44 @@ const show = (req, res) => {
 
 const store = (req, res) => {
   const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id } = req.body;
+
   if (!titolo || !descrizione || !numero_stanze || !numero_letti || !numero_bagni || !metri_quadri || !indirizzo_completo || !email || !tipologia || !luogo || !prezzo_notte || !proprietary_users_id) {
     return res.status(400).send('Campi obbligatori');
   }
+
   const sql = `
     INSERT INTO real_estate 
     (titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
+
   connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id], (err, results) => {
     if (err) return res.status(500).send({ error: err.message });
-    res.status(201).send('Immobile creato');
+
+    const real_estate_id = results.insertId;
+    res.status(201).send({ message: 'Immobile creato', real_estate_id });
   })
+}
+
+const storeImages = (req, res) => {
+
+  const { tipologia, real_estate_id } = req.body
+  const imageName = req.file.filename;
+
+  if (!imageName || !real_estate_id) {
+    return res.status(400).json({ error: 'Immagine o real_estate_id mancanti' });
+  }
+
+  const sql = 'INSERT INTO images (url, tipologia, real_estate_id) VALUES (?, ?, ?)'
+
+  connection.query(sql, [imageName, tipologia, real_estate_id], (err, results) => {
+    if (err) return res.status(500).json({ error: err })
+
+    res.json({
+      message: 'Immagini caricate con successo'
+    });
+  })
+
 }
 
 const storeInterestedUser = (req, res) => {
@@ -177,40 +203,63 @@ const modify = (req, res) => {
 }
 
 const destroy = (req, res) => {
-
   const id = req.params.id;
 
-  const selectSql = 'SELECT * FROM images WHERE images.real_estate_id = ?'
+  const selectSql = 'SELECT * FROM images WHERE images.real_estate_id = ?';
 
-  const sqlDelete =
-    `DELETE FROM real_estate 
-  JOIN images ON real_estate.id = images.real_estate_id
-  WHERE real_estate.id = ?`
+  const sqlDelete = `
+    DELETE real_estate, images 
+    FROM real_estate 
+    JOIN images ON real_estate.id = images.real_estate_id
+    WHERE real_estate.id = ?`;
 
   connection.query(selectSql, [id], (err, results) => {
-    const imageName = results.forEach(image => {
-      return image.url
-    })
-    const imagePath = path.join(__dirname, '../public/img/immobili', imageName)
+    if (err) {
+      return res.status(500).json({ error: 'Errore nel recuperare le immagini: ' + err });
+    }
 
-    fs.unlink(imagePath, (err) => {
-      console.log(err);
-    })
+    const imageNames = results.map(image => image.url);
 
-    connection.query(sqlDelete, [id], (err) => {
-      if (err) return res.status(500).json({ error: "Non è stato possibile eliminare l'immobile" })
-      res.json({ message: 'Immobile eliminato con successo' })
-    })
+    const imagePaths = imageNames.map(imageName =>
+      path.join(__dirname, '../public/img/immobili', imageName)
+    );
 
-    res.sendStatus(204)
-  })
-}
+    const deleteImages = imagePaths.map(imagePath => {
+      return new Promise((resolve, reject) => {
+        fs.unlink(imagePath, (err) => {
+          if (err) {
+            console.error('Errore durante la cancellazione del file:', err);
+            reject(err);
+          } else {
+            console.log('File eliminato con successo:', imagePath);
+            resolve();
+          }
+        });
+      });
+    });
+
+    Promise.all(deleteImages)
+      .then(() => {
+        connection.query(sqlDelete, [id], (err) => {
+          if (err) {
+            return res.status(500).json({ error: 'Errore nella cancellazione del record: ' + err });
+          }
+
+          res.json({ message: 'Immobile e immagini eliminati con successo' });
+        });
+      })
+      .catch((err) => {
+        res.status(500).json({ error: 'Errore nella cancellazione delle immagini: ' + err });
+      });
+  });
+};
 
 
 module.exports = {
   index,
   show,
   store,
+  storeImages,
   storeReviews,
   storeInterestedUser,
   storeProprietaryUser,
