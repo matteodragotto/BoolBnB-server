@@ -17,7 +17,11 @@ const index = (req, res) => {
 
       const newImages = result.image_urls ? result.image_urls.split(',') : []
 
-      return { ...result, image_urls: newImages }
+      const newImagesPath = newImages.map(image => (
+        `${req.imagePath}/${image}`
+      ))
+
+      return { ...result, image_urls: newImagesPath }
     })
     res.json(immobili)
   })
@@ -45,7 +49,12 @@ const show = (req, res) => {
     connection.query(sqlImage, [id], (err, resultsImg) => {
       if (err) return res.status(500).json({ error: err.message })
 
-      const correctedImage = resultsImg;
+      const allImages = resultsImg;
+
+      const correctedImage = allImages.map(image => {
+        return { url: `${req.imagePath}/${image.url}` }
+      });
+
 
 
       connection.query(sqlReviews, [id], (err, resultsReviews) => {
@@ -100,7 +109,6 @@ const storeImages = (req, res) => {
       message: 'Immagini caricate con successo'
     });
   })
-
 }
 
 const storeInterestedUser = (req, res) => {
