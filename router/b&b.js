@@ -15,19 +15,8 @@ router.post('/immagini', bnbController.storeImages)
 
 router.post('/:id', bnbController.storeReviews);
 
-router.post('/UI/registrazione', bnbController.storeInterestedUser)
-router.post('/UP/registrazione', bnbController.storeProprietaryUser)
-
-
-
-//update
-router.put('/:id', bnbController.update)
-
 //modify
 router.patch('/:id', bnbController.modify)
-
-//destroy
-router.delete('/:id', bnbController.destroy)
 
 module.exports = router
 
