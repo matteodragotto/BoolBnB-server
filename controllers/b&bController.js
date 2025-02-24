@@ -7,7 +7,9 @@ const index = (req, res) => {
   GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
   FROM apartments
   LEFT JOIN images ON images.apartments_id = apartments.id
-  GROUP BY apartments.id;`
+  GROUP BY apartments.id
+  ORDER BY mi_piace DESC
+  LIMIT 20;`
 
   connection.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err })
@@ -20,11 +22,82 @@ const index = (req, res) => {
         `${req.imagePath}/${image}`
       ))
 
-      return { ...result, image_urls: newImagesPath }
+      return { ...result, image_urls: newImages }
     })
     res.json(immobili)
   })
 }
+
+const indexSearch = (req, res) => {
+  // Estraiamo i parametri di ricerca dalla query string
+  const { price_min, price_max, city, rooms_min, rooms_max } = req.query;
+
+  // Creiamo la parte della query dinamica in base ai parametri passati
+  let whereClauses = [];
+  let params = [];
+
+  // Aggiungiamo il filtro sul prezzo minimo
+  if (price_min) {
+    whereClauses.push('apartments.price >= ?');
+    params.push(price_min);
+  }
+
+  // Aggiungiamo il filtro sul prezzo massimo
+  if (price_max) {
+    whereClauses.push('apartments.price <= ?');
+    params.push(price_max);
+  }
+
+  // Aggiungiamo il filtro sulla città
+  if (city) {
+    whereClauses.push('apartments.city = ?');
+    params.push(city);
+  }
+
+  // Aggiungiamo il filtro sul numero minimo di camere
+  if (rooms_min) {
+    whereClauses.push('apartments.rooms >= ?');
+    params.push(rooms_min);
+  }
+
+  // Aggiungiamo il filtro sul numero massimo di camere
+  if (rooms_max) {
+    whereClauses.push('apartments.rooms <= ?');
+    params.push(rooms_max);
+  }
+
+  // Se ci sono dei filtri, li aggiungiamo alla query
+  let whereSql = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+
+  // Costruisci la query SQL finale
+  const sql = `
+    SELECT apartments.*, 
+    GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
+    FROM apartments
+    LEFT JOIN images ON images.apartments_id = apartments.id
+    ${whereSql}
+    GROUP BY apartments.id;
+  `;
+
+  // Esegui la query con i parametri dinamici
+  connection.query(sql, params, (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+
+    const immobili = results.map(result => {
+
+      const newImages = result.image_urls ? result.image_urls.split(',') : [];
+
+      const newImagesPath = newImages.map(image => (
+        `${req.imagePath}/${image}`
+      ));
+
+      return { ...result, image_urls: newImagesPath };
+    });
+
+    res.json(immobili);
+  });
+};
+
 
 const show = (req, res) => {
   const id = req.params.id;
@@ -152,6 +225,7 @@ const modify = (req, res) => {
 
 module.exports = {
   index,
+  indexSearch,
   show,
   store,
   storeImages,
