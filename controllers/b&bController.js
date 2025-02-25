@@ -1,6 +1,7 @@
 const connection = require('../data/db');
 const z = require('zod');
 
+// validazione searchIndex
 const searchSchema = z.object({
   price_min: z.string()
     .optional()
@@ -36,6 +37,80 @@ const searchSchema = z.object({
     .transform(val => (val !== undefined ? Number(val) : undefined)),
 });
 
+// validazione rotta store per immobili
+const storeImmobiliSchema = z.object({
+  titolo: z.string()
+    .min(2, "Titolo troppo corto")
+    .max(100, "Il titolo è troppo lungo")
+    .optional(),
+
+  descrizione: z.string()
+    .min(2, "Descrizione troppo corta")
+    .max(300, "Descrizione troppo lunga")
+    .optional(),
+
+  numero_stanze: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero minimo di stanze deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  numero_letti: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero minimo di letti deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  numero_bagni: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero minimo di bagni deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  metri_quadri: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 15), {
+      message: "Il numero minimo di metri quadri deve essere almeno 15",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  indirizzo_completo: z.string()
+    .min(2, "Indirizzo troppo corto")
+    .max(200, "Indirizzo troppo lungo")
+    .optional(),
+
+  email: z.string()
+    .min(2, "email troppo corta")
+    .max(200, "email troppo lunga")
+    .optional(),
+
+  tipologia: z.string()
+    .min(2, "Tipologia troppo corta")
+    .max(100, "Tipologia troppo lunga")
+    .optional(),
+
+  luogo: z.string()
+    .min(2, "Nome luogo troppo corto")
+    .max(200, "Nome luogo troppo lungo")
+    .optional(),
+
+  prezzo_notte: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il prezzo minimo deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  proprietary_users_id: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "L'ID deve esssere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+});
 
 
 const index = (req, res) => {
@@ -190,7 +265,14 @@ const show = (req, res) => {
 }
 
 const store = (req, res) => {
-  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id } = req.body;
+
+  const parsed = storeImmobiliSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ errors: parsed.error.format() });
+  }
+
+  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id } = parsed.data;
 
   if (!titolo || !descrizione || !numero_stanze || !numero_letti || !numero_bagni || !metri_quadri || !indirizzo_completo || !email || !tipologia || !luogo || !prezzo_notte || !proprietary_users_id) {
     return res.status(400).send('Campi obbligatori');
