@@ -22,7 +22,7 @@ const index = (req, res) => {
         `${req.imagePath}/${image}`
       ))
 
-      return { ...result, image_urls: newImages }
+      return { ...result, image_urls: newImagesPath }
     })
     res.json(immobili)
   })
