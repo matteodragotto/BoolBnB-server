@@ -1,5 +1,41 @@
-const connection = require('../data/db')
-const path = require('path')
+const connection = require('../data/db');
+const z = require('zod');
+
+const searchSchema = z.object({
+  price_min: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "Il prezzo minimo deve essere un numero positivo",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  price_max: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "Il prezzo massimo deve essere un numero positivo",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  city: z.string()
+    .min(2, "Il nome della città è troppo corto")
+    .max(100, "Il nome della città è troppo lungo")
+    .optional(),
+
+  rooms_min: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero minimo di stanze deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  rooms_max: z.string()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero massimo di stanze deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+});
+
 
 
 const index = (req, res) => {
@@ -29,8 +65,15 @@ const index = (req, res) => {
 }
 
 const indexSearch = (req, res) => {
-  // Estraiamo i parametri di ricerca dalla query string
-  const { price_min, price_max, city, rooms_min, rooms_max } = req.query;
+  // Validiamo i parametri ricevuti
+  const parsed = searchSchema.safeParse(req.query);
+
+  // Se ci sono errori, restituiamo un errore 400 con i dettagli
+  if (!parsed.success) {
+    return res.status(400).json({ errors: parsed.error.format() });
+  }
+
+  const { price_min, price_max, city, rooms_min, rooms_max } = parsed.data;
 
   // Creiamo la parte della query dinamica in base ai parametri passati
   let whereClauses = [];
