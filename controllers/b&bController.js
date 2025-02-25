@@ -114,15 +114,20 @@ const storeImmobiliSchema = z.object({
 
 
 const index = (req, res) => {
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   const sql = `SELECT apartments.*, 
   GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
   FROM apartments
   LEFT JOIN images ON images.apartments_id = apartments.id
   GROUP BY apartments.id
   ORDER BY mi_piace DESC
-  LIMIT 20;`
+  LIMIT ? OFFSET ?;`
 
-  connection.query(sql, (err, results) => {
+  connection.query(sql, [limit, offset], (err, results) => {
     if (err) return res.status(500).json({ error: err })
 
     const immobili = results.map(result => {
@@ -134,8 +139,23 @@ const index = (req, res) => {
       // ))
 
       return { ...result, image_urls: newImages }
+    });
+
+    connection.query(`SELECT COUNT(*) AS total FROM apartments`, (err, totalResults) => {
+      if (err) return res.status(500).json({ error: err });
+
+      const total = totalResults[0].total;
+      const totalPages = Math.ceil(total / limit);
+
+      res.json({
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limit,
+        data: immobili
+      });
+
     })
-    res.json(immobili)
   })
 }
 
