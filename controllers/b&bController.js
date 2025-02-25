@@ -102,11 +102,14 @@ const indexSearch = (req, res) => {
 const show = (req, res) => {
   const id = req.params.id;
 
-  const sql = `SELECT A.*, ROUND(AVG(R.voto)) AS media_voti
-  FROM apartments A
-  LEFT JOIN reviews R ON A.id = R.apartments_id
-  WHERE A.id = ?
-  GROUP BY A.id`
+  const sql = `SELECT A.*, users.*, languages.*, ROUND(AVG(R.voto)) AS media_voti
+   FROM apartments A
+   LEFT JOIN reviews R ON A.id = R.apartments_id
+   LEFT JOIN users ON users.id = A.users_id
+   LEFT JOIN language_user ON language_user.users_id = users.id
+   LEFT JOIN languages ON languages.id = language_user.languages_id
+   WHERE A.id = ?
+   GROUP BY A.id, users.id, languages.id;`
 
   const sqlImage = `SELECT images.url FROM images WHERE apartments_id = ?`
 
