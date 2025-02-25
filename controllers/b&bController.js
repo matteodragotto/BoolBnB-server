@@ -38,31 +38,31 @@ const indexSearch = (req, res) => {
 
   // Aggiungiamo il filtro sul prezzo minimo
   if (price_min) {
-    whereClauses.push('apartments.price >= ?');
+    whereClauses.push('apartments.prezzo_notte >= ?');
     params.push(price_min);
   }
 
   // Aggiungiamo il filtro sul prezzo massimo
   if (price_max) {
-    whereClauses.push('apartments.price <= ?');
+    whereClauses.push('apartments.prezzo_notte <= ?');
     params.push(price_max);
   }
 
   // Aggiungiamo il filtro sulla città
   if (city) {
-    whereClauses.push('apartments.city = ?');
+    whereClauses.push('apartments.indirizzo_completo = ?');
     params.push(city);
   }
 
   // Aggiungiamo il filtro sul numero minimo di camere
   if (rooms_min) {
-    whereClauses.push('apartments.rooms >= ?');
+    whereClauses.push('apartments.numero_stanze >= ?');
     params.push(rooms_min);
   }
 
   // Aggiungiamo il filtro sul numero massimo di camere
   if (rooms_max) {
-    whereClauses.push('apartments.rooms <= ?');
+    whereClauses.push('apartments.numero_stanze <= ?');
     params.push(rooms_max);
   }
 
