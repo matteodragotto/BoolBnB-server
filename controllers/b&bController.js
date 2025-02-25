@@ -18,11 +18,11 @@ const index = (req, res) => {
 
       const newImages = result.image_urls ? result.image_urls.split(',') : []
 
-      const newImagesPath = newImages.map(image => (
-        `${req.imagePath}/${image}`
-      ))
+      // const newImagesPath = newImages.map(image => (
+      //   `${req.imagePath}/${image}`
+      // ))
 
-      return { ...result, image_urls: newImagesPath }
+      return { ...result, image_urls: newImages }
     })
     res.json(immobili)
   })
@@ -88,11 +88,11 @@ const indexSearch = (req, res) => {
 
       const newImages = result.image_urls ? result.image_urls.split(',') : [];
 
-      const newImagesPath = newImages.map(image => (
-        `${req.imagePath}/${image}`
-      ));
+      // const newImagesPath = newImages.map(image => (
+      //   `${req.imagePath}/${image}`
+      // ));
 
-      return { ...result, image_urls: newImagesPath };
+      return { ...result, image_urls: newImages };
     });
 
     res.json(immobili);
