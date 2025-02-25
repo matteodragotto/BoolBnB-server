@@ -6,6 +6,8 @@ const bnbController = require('../controllers/b&bController')
 //index
 router.get('/', bnbController.index)
 
+router.get('/search', bnbController.indexSearch)
+
 //show
 router.get('/:id', bnbController.show)
 
