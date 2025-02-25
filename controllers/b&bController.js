@@ -1,6 +1,7 @@
 const connection = require('../data/db');
 const z = require('zod');
 
+// validazione searchIndex
 const searchSchema = z.object({
   price_min: z.string()
     .optional()
@@ -36,18 +37,92 @@ const searchSchema = z.object({
     .transform(val => (val !== undefined ? Number(val) : undefined)),
 });
 
+// validazione rotta store per immobili
+const storeImmobiliSchema = z.object({
+  titolo: z.string()
+    .min(2, "Titolo troppo corto")
+    .max(100, "Il titolo è troppo lungo")
+    .optional(),
+
+  descrizione: z.string()
+    .min(2, "Descrizione troppo corta")
+    .max(300, "Descrizione troppo lunga")
+    .optional(),
+
+  numero_stanze: z.number()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero minimo di stanze deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  numero_letti: z.number()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero minimo di letti deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  numero_bagni: z.number()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il numero minimo di bagni deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  metri_quadri: z.number()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 15), {
+      message: "Il numero minimo di metri quadri deve essere almeno 15",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  indirizzo_completo: z.string()
+    .min(2, "Indirizzo troppo corto")
+    .max(200, "Indirizzo troppo lungo")
+    .optional(),
+
+  email: z.string()
+    .min(2, "email troppo corta")
+    .max(200, "email troppo lunga")
+    .optional(),
+
+  tipologia: z.string()
+    .min(2, "Tipologia troppo corta")
+    .max(100, "Tipologia troppo lunga")
+    .optional(),
+
+  prezzo_notte: z.number()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "Il prezzo minimo deve essere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+
+  users_id: z.number()
+    .optional()
+    .refine(val => val === undefined || (!isNaN(Number(val)) && Number(val) >= 1), {
+      message: "L'ID deve esssere almeno 1",
+    })
+    .transform(val => (val !== undefined ? Number(val) : undefined)),
+});
 
 
 const index = (req, res) => {
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   const sql = `SELECT apartments.*, 
   GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
   FROM apartments
   LEFT JOIN images ON images.apartments_id = apartments.id
   GROUP BY apartments.id
   ORDER BY mi_piace DESC
-  LIMIT 20;`
+  LIMIT ? OFFSET ?;`
 
-  connection.query(sql, (err, results) => {
+  connection.query(sql, [limit, offset], (err, results) => {
     if (err) return res.status(500).json({ error: err })
 
     const immobili = results.map(result => {
@@ -59,8 +134,23 @@ const index = (req, res) => {
       // ))
 
       return { ...result, image_urls: newImages }
+    });
+
+    connection.query(`SELECT COUNT(*) AS total FROM apartments`, (err, totalResults) => {
+      if (err) return res.status(500).json({ error: err });
+
+      const total = totalResults[0].total;
+      const totalPages = Math.ceil(total / limit);
+
+      res.json({
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limit,
+        data: immobili
+      });
+
     })
-    res.json(immobili)
   })
 }
 
@@ -190,19 +280,26 @@ const show = (req, res) => {
 }
 
 const store = (req, res) => {
-  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, proprietary_users_id } = req.body;
 
-  if (!titolo || !descrizione || !numero_stanze || !numero_letti || !numero_bagni || !metri_quadri || !indirizzo_completo || !email || !tipologia || !luogo || !prezzo_notte || !proprietary_users_id) {
+  const parsed = storeImmobiliSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ errors: parsed.error.format() });
+  }
+
+  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, users_id } = parsed.data;
+
+  if (!titolo || !descrizione || !numero_stanze || !numero_letti || !numero_bagni || !metri_quadri || !indirizzo_completo || !email || !tipologia || !prezzo_notte || !users_id) {
     return res.status(400).send('Campi obbligatori');
   }
 
   const sql = `
     INSERT INTO apartments 
-    (titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, users_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, users_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, luogo, prezzo_notte, users_id], (err, results) => {
+  connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, users_id], (err, results) => {
     if (err) return res.status(500).send({ error: err.message });
 
     const apartments_id = results.insertId;
