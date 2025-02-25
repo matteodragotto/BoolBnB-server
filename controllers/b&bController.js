@@ -213,7 +213,7 @@ const storeReviews = (req, res) => {
 
 
 const modify = (req, res) => {
-  const id = req.params.id
+  const id = req.body.apartmentsId
 
   const sql = `UPDATE apartments SET mi_piace = mi_piace + 1 WHERE apartments.id = ?`
 
