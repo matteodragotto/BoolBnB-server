@@ -50,7 +50,7 @@ const indexSearch = (req, res) => {
 
   // Aggiungiamo il filtro sulla città
   if (city) {
-    whereClauses.push('apartments.indirizzo_completo = ?');
+    whereClauses.push("SUBSTRING_INDEX(apartments.indirizzo_completo, ', ', -1) = ?");
     params.push(city);
   }
 
@@ -72,6 +72,7 @@ const indexSearch = (req, res) => {
   // Costruisci la query SQL finale
   const sql = `
     SELECT apartments.*, 
+    SUBSTRING_INDEX(apartments.indirizzo_completo, ', ', -1) AS citta,
     GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
     FROM apartments
     LEFT JOIN images ON images.apartments_id = apartments.id
