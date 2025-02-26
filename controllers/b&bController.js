@@ -137,7 +137,7 @@ const show = (req, res) => {
   LEFT JOIN languages ON languages.id = language_user.languages_id
   LEFT JOIN service_apartment ON service_apartment.apartments_id = A.id
   LEFT JOIN services ON services.id = service_apartment.services_id
-  WHERE A.id = 1
+  WHERE A.id = ?
   GROUP BY A.id, users.id, languages.id;`
 
   const sqlImage = `SELECT images.url FROM images WHERE apartments_id = ?`
