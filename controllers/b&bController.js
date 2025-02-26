@@ -153,9 +153,9 @@ const show = (req, res) => {
 
       const allImages = resultsImg;
 
-      const correctedImage = allImages.map(image => {
-        return { url: `${req.imagePath}/${image.url}` }
-      });
+      // const correctedImage = allImages.map(image => {
+      //   return { url: `${req.imagePath}/${image.url}` }
+      // });
 
 
 
@@ -164,7 +164,7 @@ const show = (req, res) => {
         apartments.reviews = resultsReviews.length > 0 ? resultsReviews : [];
         res.json({
           ...apartments,
-          image_urls: correctedImage
+          image_urls: allImages
         })
       })
     })
