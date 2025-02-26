@@ -49,65 +49,64 @@ const index = (req, res) => {
 }
 
 const indexSearch = (req, res) => {
-  // Validiamo i parametri ricevuti
+
   const parsed = searchSchema.safeParse(req.query);
 
-  // Se ci sono errori, restituiamo un errore 400 con i dettagli
   if (!parsed.success) {
     return res.status(400).json({ errors: parsed.error.format() });
   }
 
   const { price_min, price_max, city, rooms_min, rooms_max } = parsed.data;
 
-  // Creiamo la parte della query dinamica in base ai parametri passati
+
   let whereClauses = [];
   let params = [];
 
-  // Aggiungiamo il filtro sul prezzo minimo
   if (price_min) {
     whereClauses.push('apartments.prezzo_notte >= ?');
     params.push(price_min);
   }
 
-  // Aggiungiamo il filtro sul prezzo massimo
+
   if (price_max) {
     whereClauses.push('apartments.prezzo_notte <= ?');
     params.push(price_max);
   }
 
-  // Aggiungiamo il filtro sulla città
+
   if (city) {
     whereClauses.push("SUBSTRING_INDEX(apartments.indirizzo_completo, ', ', -1) = ?");
     params.push(city);
   }
 
-  // Aggiungiamo il filtro sul numero minimo di camere
+
   if (rooms_min) {
     whereClauses.push('apartments.numero_stanze >= ?');
     params.push(rooms_min);
   }
 
-  // Aggiungiamo il filtro sul numero massimo di camere
+
   if (rooms_max) {
     whereClauses.push('apartments.numero_stanze <= ?');
     params.push(rooms_max);
   }
 
-  // Se ci sono dei filtri, li aggiungiamo alla query
+
   let whereSql = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
-  // Costruisci la query SQL finale
+
   const sql = `
-    SELECT apartments.*, 
+    SELECT apartments.*, ROUND(AVG(R.voto)) AS media_voti,
     SUBSTRING_INDEX(apartments.indirizzo_completo, ', ', -1) AS citta,
     GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
     FROM apartments
+    LEFT JOIN reviews R ON apartments.id = R.apartments_id
     LEFT JOIN images ON images.apartments_id = apartments.id
     ${whereSql}
     GROUP BY apartments.id;
   `;
 
-  // Esegui la query con i parametri dinamici
+
   connection.query(sql, params, (err, results) => {
     if (err) return res.status(500).json({ error: err });
 
