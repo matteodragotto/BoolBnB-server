@@ -129,14 +129,16 @@ const indexSearch = (req, res) => {
 const show = (req, res) => {
   const id = req.params.id;
 
-  const sql = `SELECT A.*, users.*, languages.*, ROUND(AVG(R.voto)) AS media_voti
-   FROM apartments A
-   LEFT JOIN reviews R ON A.id = R.apartments_id
-   LEFT JOIN users ON users.id = A.users_id
-   LEFT JOIN language_user ON language_user.users_id = users.id
-   LEFT JOIN languages ON languages.id = language_user.languages_id
-   WHERE A.id = ?
-   GROUP BY A.id, users.id, languages.id;`
+  const sql = `SELECT A.*, users.*, languages.*, ROUND(AVG(R.voto)) AS media_voti, GROUP_CONCAT(services.nome_servizio ORDER BY services.id) AS services_list
+  FROM apartments A
+  LEFT JOIN reviews R ON A.id = R.apartments_id
+  LEFT JOIN users ON users.id = A.users_id
+  LEFT JOIN language_user ON language_user.users_id = users.id
+  LEFT JOIN languages ON languages.id = language_user.languages_id
+  LEFT JOIN service_apartment ON service_apartment.apartments_id = A.id
+  LEFT JOIN services ON services.id = service_apartment.services_id
+  WHERE A.id = 1
+  GROUP BY A.id, users.id, languages.id;`
 
   const sqlImage = `SELECT images.url FROM images WHERE apartments_id = ?`
 
@@ -147,6 +149,8 @@ const show = (req, res) => {
     if (results.length === 0) return res.status(404).json({ error: 'Immobile non trovato' })
 
     const apartments = results[0];
+
+    const services = apartments.services_list ? apartments.services_list.split(',') : []
 
     connection.query(sqlImage, [id], (err, resultsImg) => {
       if (err) return res.status(500).json({ error: err.message })
@@ -164,7 +168,8 @@ const show = (req, res) => {
         apartments.reviews = resultsReviews.length > 0 ? resultsReviews : [];
         res.json({
           ...apartments,
-          image_urls: allImages
+          image_urls: allImages,
+          services_list: services
         })
       })
     })
