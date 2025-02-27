@@ -44,7 +44,6 @@ const searchSchema = z.object({
 
 // validazione rotta store per immobili
 const storeImmobiliSchema = z.object({
-    id: z.number().positive(),
     titolo: z.string()
         .min(2, "Titolo troppo corto")
         .max(100, "Il titolo è troppo lungo")
@@ -118,6 +117,21 @@ const storeImmobiliSchema = z.object({
         })
         .nullable()
         .default(),
+
+    nome: z.string()
+        .min(2, "Nome troppo corto")
+        .max(100, "Nome troppo lungo")
+        .optional(),
+
+    cognome: z.string()
+        .min(2, "Cognome troppo corto")
+        .max(100, "Cognome troppo lungo")
+        .optional(),
+    numero_telefono: z.string()
+        .min(2, "Numero troppo corto")
+        .max(100, "Numero troppo lungo")
+        .optional(),
+
 });
 
 module.exports = {

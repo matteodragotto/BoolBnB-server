@@ -218,38 +218,51 @@ const store = (req, res) => {
     return res.status(400).json({ errors: parsed.error.format() });
   }
 
-  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, users_id } = parsed.data;
+  const { titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, nome, cognome, numero_telefono } = parsed.data;
 
-  if (!titolo || !descrizione || !numero_stanze || !numero_letti || !numero_bagni || !metri_quadri || !indirizzo_completo || !email || !tipologia || !prezzo_notte || !users_id) {
+  if (!titolo || !descrizione || !numero_stanze || !numero_letti || !numero_bagni || !metri_quadri || !indirizzo_completo || !email || !tipologia || !prezzo_notte || !nome || !cognome || !numero_telefono) {
     return res.status(400).send('Campi obbligatori');
   }
 
-  const sql = `
+  const insertUserSql = `
+    INSERT INTO users (nome, cognome, numero_telefono)
+    VALUES (?, ?, ?)
+  `;
+
+  connection.query(insertUserSql, [nome, cognome, numero_telefono], (err, userInsertResults) => {
+    if (err) return res.status(500).send({ error: err.message });
+
+    const userId = userInsertResults.insertId; // Ottieni l'ID dell'utente appena creato
+
+
+    const sql = `
     INSERT INTO apartments 
     (titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, users_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, users_id], (err, results) => {
-    if (err) return res.status(500).send({ error: err.message });
+    connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, userId], (err, results) => {
+      if (err) return res.status(500).send({ error: err.message });
 
-    const apartments_id = results.insertId;
-    res.status(201).send({ message: 'Immobile creato', apartments_id });
+      const apartments_id = results.insertId;
+      res.json({ message: 'Immobile creato', apartments_id });
+
+    })
   })
 }
 
 const storeImages = (req, res) => {
 
-  const { tipologia, apartments_id } = req.body
+  const { apartments_id } = req.body
   const imageName = req.file.filename;
 
   if (!imageName || !apartments_id) {
     return res.status(400).json({ error: 'Immagine o apartments_id mancanti' });
   }
 
-  const sql = 'INSERT INTO images (url, tipologia, apartments_id) VALUES (?, ?, ?)'
+  const sql = 'INSERT INTO images (url, apartments_id) VALUES (?, ?)'
 
-  connection.query(sql, [imageName, tipologia, apartments_id], (err, results) => {
+  connection.query(sql, [imageName, apartments_id], (err, results) => {
     if (err) return res.status(500).json({ error: err })
 
     res.json({
@@ -257,8 +270,6 @@ const storeImages = (req, res) => {
     });
   })
 }
-
-
 
 const storeReviews = (req, res) => {
   const id = req.params.id

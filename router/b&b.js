@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const bnbController = require('../controllers/b&bController')
+const upload = require('../middlewares/multer')
 
 
 //index
@@ -13,7 +14,8 @@ router.get('/:id', bnbController.show)
 
 //store
 router.post('/', bnbController.store)
-router.post('/immagini', bnbController.storeImages)
+
+router.post('/immagini', upload.array('url', 10), bnbController.storeImages)
 
 router.post('/:id', bnbController.storeReviews);
 
