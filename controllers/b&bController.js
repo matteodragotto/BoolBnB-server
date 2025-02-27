@@ -232,7 +232,7 @@ const store = (req, res) => {
   connection.query(insertUserSql, [nome, cognome, numero_telefono], (err, userInsertResults) => {
     if (err) return res.status(500).send({ error: err.message });
 
-    const userId = userInsertResults.insertId; // Ottieni l'ID dell'utente appena creato
+    const userId = userInsertResults.insertId;
 
 
     const sql = `
@@ -252,24 +252,40 @@ const store = (req, res) => {
 }
 
 const storeImages = (req, res) => {
+  const { apartments_id } = req.body;
 
-  const { apartments_id } = req.body
-  const imageName = req.file.filename;
-
-  if (!imageName || !apartments_id) {
-    return res.status(400).json({ error: 'Immagine o apartments_id mancanti' });
+  if (!req.files || req.files.length === 0 || !apartments_id) {
+    return res.status(400).json({ error: 'Immagini o apartments_id mancanti' });
   }
 
-  const sql = 'INSERT INTO images (url, apartments_id) VALUES (?, ?)'
+  const imagePaths = req.files.map(file => file.filename);
 
-  connection.query(sql, [imageName, apartments_id], (err, results) => {
-    if (err) return res.status(500).json({ error: err })
+  console.log('Immagini caricate:', imagePaths);
+  console.log('ID appartamento:', apartments_id);
 
-    res.json({
-      message: 'Immagini caricate con successo'
+  const sql = 'INSERT INTO images (url, apartments_id) VALUES (?, ?)';
+  const insertImagePromises = imagePaths.map(imageName => {
+    return new Promise((resolve, reject) => {
+      connection.query(sql, [imageName, apartments_id], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
     });
-  })
+  });
+
+  Promise.all(insertImagePromises)
+    .then(() => {
+      res.json({ message: 'Immagini caricate con successo nel database' });
+    })
+    .catch(err => {
+      console.error('Errore nel database:', err);
+      res.status(500).json({ error: 'Errore nel salvataggio delle immagini nel database' });
+    });
 }
+
 
 const storeReviews = (req, res) => {
   const id = req.params.id
