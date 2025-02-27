@@ -50,6 +50,10 @@ const index = (req, res) => {
 
 const indexSearch = (req, res) => {
 
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   const parsed = searchSchema.safeParse(req.query);
 
   if (!parsed.success) {
@@ -111,11 +115,17 @@ const indexSearch = (req, res) => {
     LEFT JOIN reviews R ON apartments.id = R.apartments_id
     LEFT JOIN images ON images.apartments_id = apartments.id
     ${whereSql}
-    GROUP BY apartments.id;
+    GROUP BY apartments.id
+    LIMIT ? OFFSET ?;
+  `;
+
+  const countSql = `
+    SELECT COUNT(*) AS total FROM apartments 
+    ${whereSql};
   `;
 
 
-  connection.query(sql, params, (err, results) => {
+  connection.query(sql, [...params, limit, offset], (err, results) => {
     if (err) return res.status(500).json({ error: err });
 
     const immobili = results.map(result => {
@@ -129,7 +139,22 @@ const indexSearch = (req, res) => {
       return { ...result, image_urls: newImages };
     });
 
-    res.json(immobili);
+
+    connection.query(countSql, params, (err, totalResults) => {
+      if (err) return res.status(500).json({ error: err });
+
+      const total = totalResults[0].total;
+      const totalPages = Math.ceil(total / limit);
+
+      res.json({
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limit,
+        data: immobili
+      });
+
+    })
   });
 };
 
