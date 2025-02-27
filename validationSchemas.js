@@ -22,7 +22,7 @@ const searchSchema = z.object({
     rooms_min: z.coerce.number()
         .optional()
         .refine(val => val === undefined || (Number(val) >= 1), {
-            message: "Il numero massimo di stanze deve essere almeno 1",
+            message: "Il numero minimo di stanze deve essere almeno 1",
         }),
 
     rooms_max: z.coerce.number()
@@ -30,6 +30,16 @@ const searchSchema = z.object({
         .refine(val => val === undefined || (Number(val) >= 1), {
             message: "Il numero massimo di stanze deve essere almeno 1",
         }),
+
+    beds_min: z.coerce.number()
+        .optional()
+        .refine(val => val === undefined || (Number(val) >= 1), {
+            message: "Il numero minimo di letti deve essere almeno 1",
+        }),
+    type: z.string()
+        .min(2, "Tipologia troppo corta")
+        .max(100, "Tipologia troppo lunga")
+        .optional()
 });
 
 // validazione rotta store per immobili

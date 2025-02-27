@@ -56,7 +56,7 @@ const indexSearch = (req, res) => {
     return res.status(400).json({ errors: parsed.error.format() });
   }
 
-  const { price_min, price_max, city, rooms_min, rooms_max } = parsed.data;
+  const { price_min, price_max, city, rooms_min, rooms_max, beds_min, type } = parsed.data;
 
 
   let whereClauses = [];
@@ -91,9 +91,17 @@ const indexSearch = (req, res) => {
     params.push(rooms_max);
   }
 
+  if (beds_min) {
+    whereClauses.push('apartments.numero_letti >= ?');
+    params.push(beds_min);
+  }
+
+  if (type) {
+    whereClauses.push('apartments.tipologia = ?');
+    params.push(type);
+  }
 
   let whereSql = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
-
 
   const sql = `
     SELECT apartments.*, ROUND(AVG(R.voto)) AS media_voti,
