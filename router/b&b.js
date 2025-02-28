@@ -17,7 +17,7 @@ router.post('/', bnbController.store)
 
 router.post('/immagini', upload.array('url', 10), bnbController.storeImages)
 
-router.post('/:id', bnbController.storeReviews);
+router.post('/:id/recensioni', bnbController.storeReviews);
 
 //modify
 router.patch('/:id', bnbController.modify)

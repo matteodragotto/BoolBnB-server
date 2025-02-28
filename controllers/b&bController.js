@@ -290,15 +290,15 @@ const storeImages = (req, res) => {
 const storeReviews = (req, res) => {
   const id = req.params.id
 
-  const { voto, descrizione, users_id } = req.body;
+  const { voto, descrizione, nome, cognome } = req.body;
 
-  if (!voto || !descrizione || !users_id) {
+  if (!voto || !descrizione || !nome || !cognome) {
     return res.status(400).json({ error: 'Tutti i campi sono necessari' });
   }
 
-  const sql = 'INSERT INTO reviews (voto, descrizione, apartments_id, users_id) VALUES (?, ?, ?, ?)'
+  const sql = 'INSERT INTO reviews (voto, descrizione, nome, cognome, apartments_id) VALUES (?, ?, ?, ?, ?)'
 
-  connection.query(sql, [voto, descrizione, id, users_id], (err, results) => {
+  connection.query(sql, [voto, descrizione, nome, cognome, id], (err, results) => {
     if (err) return res.status(500).json({ error: err })
 
     res.json({
