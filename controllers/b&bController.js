@@ -23,11 +23,11 @@ const index = (req, res) => {
 
       const newImages = result.image_urls ? result.image_urls.split(',') : []
 
-      // const newImagesPath = newImages.map(image => (
-      //   `${req.imagePath}/${image}`
-      // ))
+      const newImagesPath = newImages.map(image => (
+        `${req.imagePath}/${image}`
+      ))
 
-      return { ...result, image_urls: newImages }
+      return { ...result, image_urls: newImagesPath }
     });
 
     connection.query(`SELECT COUNT(*) AS total FROM apartments`, (err, totalResults) => {
