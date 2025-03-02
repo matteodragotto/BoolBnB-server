@@ -8,7 +8,7 @@ const index = (req, res) => {
   const offset = (page - 1) * limit;
 
   const sql = `SELECT apartments.*, ROUND(AVG(R.voto)) AS media_voti,
-  GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
+  GROUP_CONCAT(DISTINCT images.url ORDER BY images.id) AS image_urls
   FROM apartments
   LEFT JOIN reviews R ON apartments.id = R.apartments_id
   LEFT JOIN images ON images.apartments_id = apartments.id
@@ -110,7 +110,7 @@ const indexSearch = (req, res) => {
   const sql = `
     SELECT apartments.*, ROUND(AVG(R.voto)) AS media_voti,
     SUBSTRING_INDEX(apartments.indirizzo_completo, ', ', -1) AS citta,
-    GROUP_CONCAT(images.url ORDER BY images.id) AS image_urls
+    GROUP_CONCAT(DISTINCT images.url ORDER BY images.id) AS image_urls
     FROM apartments
     LEFT JOIN reviews R ON apartments.id = R.apartments_id
     LEFT JOIN images ON images.apartments_id = apartments.id
@@ -162,7 +162,7 @@ const indexSearch = (req, res) => {
 const show = (req, res) => {
   const id = req.params.id;
 
-  const sql = `SELECT A.*, users.*, languages.*, ROUND(AVG(R.voto)) AS media_voti, GROUP_CONCAT(services.nome_servizio ORDER BY services.id) AS services_list
+  const sql = `SELECT A.*, users.*, languages.*, ROUND(AVG(R.voto)) AS media_voti, GROUP_CONCAT(DISTINCT services.nome_servizio ORDER BY services.id) AS services_list
   FROM apartments A
   LEFT JOIN reviews R ON A.id = R.apartments_id
   LEFT JOIN users ON users.id = A.users_id
