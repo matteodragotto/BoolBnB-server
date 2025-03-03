@@ -7,7 +7,7 @@ const index = (req, res) => {
   const limit = parseInt(req.query.limit) || 20;
   const offset = (page - 1) * limit;
 
-  const sql = `SELECT apartments.*, ROUND(AVG(R.voto)) AS media_voti,
+  const sql = `SELECT apartments.*, CAST(ROUND(AVG(R.voto)) AS SIGNED) AS media_voti,
   GROUP_CONCAT(DISTINCT images.url ORDER BY images.id) AS image_urls
   FROM apartments
   LEFT JOIN reviews R ON apartments.id = R.apartments_id
