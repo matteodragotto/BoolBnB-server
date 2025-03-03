@@ -309,7 +309,7 @@ const storeReviews = (req, res) => {
 }
 
 const getServices = (req, res) => {
-  const sql = 'SELECT * FROM services WHERE disponibilità = true';
+  const sql = 'SELECT * FROM services WHERE disponibilità = true ORDER BY nome_servizio ASC';
 
   connection.query(sql, (err, results) => {
     if (err) {
