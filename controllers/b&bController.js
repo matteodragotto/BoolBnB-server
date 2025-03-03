@@ -108,7 +108,7 @@ const indexSearch = (req, res) => {
   let whereSql = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
   const sql = `
-    SELECT apartments.*, ROUND(AVG(R.voto)) AS media_voti,
+    SELECT apartments.*, CAST(ROUND(AVG(R.voto)) AS SIGNED) AS media_voti,
     SUBSTRING_INDEX(apartments.indirizzo_completo, ', ', -1) AS citta,
     GROUP_CONCAT(DISTINCT images.url ORDER BY images.id) AS image_urls
     FROM apartments
