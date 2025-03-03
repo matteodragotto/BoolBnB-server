@@ -308,6 +308,50 @@ const storeReviews = (req, res) => {
 
 }
 
+const getServices = (req, res) => {
+  const sql = 'SELECT * FROM services WHERE disponibilità = true';
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json(results);
+  });
+};
+
+const addServicesToApartment = (req, res) => {
+  const apartmentId = req.params.id;
+  const { service_ids } = req.body;
+
+  if (!service_ids || !Array.isArray(service_ids)) {
+    return res.status(400).json({ error: 'Devi fornire un array di service_ids' });
+  }
+
+  const sql = 'INSERT INTO service_apartment (apartments_id, services_id) VALUES (?, ?)';
+  const insertPromises = service_ids.map(serviceId => {
+    return new Promise((resolve, reject) => {
+      connection.query(sql, [apartmentId, serviceId], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  });
+
+  Promise.all(insertPromises)
+    .then(() => {
+      res.json({ message: 'Servizi aggiunti con successo' });
+    })
+    .catch(err => {
+      console.error('Errore nel database:', err);
+      res.status(500).json({ error: 'Errore nell\'associazione dei servizi' });
+    });
+};
+
+
 
 
 const modify = (req, res) => {
@@ -332,5 +376,7 @@ module.exports = {
   store,
   storeImages,
   storeReviews,
+  getServices,
+  addServicesToApartment,
   modify
 }
