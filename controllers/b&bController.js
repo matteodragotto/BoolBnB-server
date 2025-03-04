@@ -4,7 +4,7 @@ const { searchSchema, storeImmobiliSchema } = require('../validationSchemas')
 const index = (req, res) => {
 
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit) || 8;
   const offset = (page - 1) * limit;
 
   const sql = `SELECT apartments.*, CAST(ROUND(AVG(R.voto)) AS SIGNED) AS media_voti,
@@ -51,7 +51,7 @@ const index = (req, res) => {
 const indexSearch = (req, res) => {
 
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit) || 8;
   const offset = (page - 1) * limit;
 
   const parsed = searchSchema.safeParse(req.query);
