@@ -232,7 +232,7 @@ const store = (req, res) => {
   connection.query(insertUserSql, [nome, cognome, numero_telefono], (err, userInsertResults) => {
     if (err) return res.status(500).send({ error: err.message });
 
-    const userId = userInsertResults.insertId;
+    const users_id = userInsertResults.insertId;
 
 
     const sql = `
@@ -241,11 +241,11 @@ const store = (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-    connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, userId], (err, results) => {
+    connection.query(sql, [titolo, descrizione, numero_stanze, numero_letti, numero_bagni, metri_quadri, indirizzo_completo, email, tipologia, prezzo_notte, users_id], (err, results) => {
       if (err) return res.status(500).send({ error: err.message });
 
       const apartments_id = results.insertId;
-      res.json({ message: 'Immobile creato', apartments_id });
+      res.json({ message: 'Immobile creato', apartments_id, users_id });
 
     })
   })
@@ -351,6 +351,49 @@ const addServicesToApartment = (req, res) => {
     });
 };
 
+const getLanguages = (req, res) => {
+  const sql = 'SELECT * FROM languages ORDER BY lingua ASC';
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json(results);
+  });
+}
+
+const addLanguagesToUsers = (req, res) => {
+  const userId = req.params.id;
+  const { language_ids } = req.body;
+
+  if (!language_ids || !Array.isArray(language_ids)) {
+    return res.status(400).json({ error: 'Devi fornire un array di language_ids' });
+  }
+
+  const sql = 'INSERT INTO language_user (users_id, languages_id) VALUES (?, ?)';
+  const insertPromises = language_ids.map(languageId => {
+    return new Promise((resolve, reject) => {
+      connection.query(sql, [userId, languageId], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  });
+
+  Promise.all(insertPromises)
+    .then(() => {
+      res.json({ message: 'Lingue aggiunte con successo' });
+    })
+    .catch(err => {
+      console.error('Errore nel database:', err);
+      res.status(500).json({ error: 'Errore nell\'associazione delle lingue' });
+    });
+};
+
 
 
 
@@ -378,5 +421,7 @@ module.exports = {
   storeReviews,
   getServices,
   addServicesToApartment,
+  getLanguages,
+  addLanguagesToUsers,
   modify
 }

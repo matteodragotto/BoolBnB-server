@@ -11,6 +11,8 @@ router.get('/search', bnbController.indexSearch)
 
 router.get('/services', bnbController.getServices)
 
+router.get('/languages', bnbController.getLanguages)
+
 //show
 router.get('/:id', bnbController.show)
 
@@ -22,6 +24,8 @@ router.post('/immagini', upload.array('url', 10), bnbController.storeImages)
 router.post('/:id/recensioni', bnbController.storeReviews);
 
 router.post('/:id/services', bnbController.addServicesToApartment)
+
+router.post('/:id/languages', bnbController.addLanguagesToUsers)
 
 //modify
 router.patch('/:id', bnbController.modify)
